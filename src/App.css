@@ -9,7 +9,7 @@
 
 html, body {
   width: 100%;
-  min-height: 100%; /* Cambiado de height a min-height */
+  min-height: 100%; /* Cambiaddo de height a min-height */
   font-family: 'Outfit', sans-serif;
   background: #000;
   overflow-x: hidden; /* Evita scroll horizontal */
