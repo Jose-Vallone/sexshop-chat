@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+/* Reset global para evitar márgenes o líneas extra */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  background: #000;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* La imagen debe estar en la carpeta /public */
+  background-image: url('/sex-shop.avif');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Capa oscura para dar profundidad y que el chat resalte */
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 0;
+}
+
+.chat-box {
+  z-index: 1;
+  width: 100%;
+  max-width: 450px;
+  height: 85vh;
+  background: rgba(15, 15, 20, 0.85);
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 20, 147, 0.4);
+  box-shadow: 0 0 30px rgba(255, 20, 147, 0.3);
+}
+
+.chat-header {
+  padding: 25px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 20, 147, 0.2);
+  flex-shrink: 0;
+  color: #ff69b4;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: none;
+}
+
+.chat-body::-webkit-scrollbar {
+  display: none;
+}
+
+.message-row { 
+  display: flex; 
+  width: 100%; 
+}
+
+.message-row.user { 
+  justify-content: flex-end; 
+}
+
+.bubble {
+  padding: 15px 20px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  max-width: 85%;
+  color: white;
+  word-wrap: break-word;
+}
+
+.assistant .bubble { 
+  background: #1e1e26; 
+  border-left: 4px solid #ff1493; 
+}
+
+.user .bubble { 
+  background: #ff1493; 
+}
+
+.input-area {
+  padding: 20px;
+  background: rgba(20, 20, 25, 0.9);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 20, 147, 0.2);
+}
+
+input {
+  flex: 1;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #ff1493;
+  background: #0a0a0c;
+  color: white;
+  outline: none;
+}
+
+button {
+  padding: 0 20px;
+  border-radius: 12px;
+  border: none;
+  background: #ff1493;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #ff007f;
+}
