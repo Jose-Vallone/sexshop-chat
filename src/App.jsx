@@ -13,14 +13,27 @@ function App() {
     // Mensaje de usuario
     const userMessage = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
+    
+    // Guardamos el input en una constante antes de limpiar el estado
+    const messageToSend = input;
     setInput('');
     setIsLoading(true);
+
+    // Recuperar o generar un Session ID único para este cliente
+    let sessionId = sessionStorage.getItem('chat_session_id');
+    if (!sessionId) {
+      sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
+      sessionStorage.setItem('chat_session_id', sessionId);
+    }
 
     try {
       const response = await fetch('https://automatizaciones2.app.n8n.cloud/webhook/sexshop-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatInput: input }),
+        body: JSON.stringify({ 
+          chatInput: messageToSend,
+          sessionId: sessionId // Enviado a n8n para mantener el contexto de la memoria
+        }),
       });
 
       const data = await response.json();
