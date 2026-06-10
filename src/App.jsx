@@ -10,7 +10,7 @@ function App() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Mensaje de usuario
+    // 1. Guardar mensaje de usuario y limpiar input
     const userMessage = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
     
@@ -18,7 +18,7 @@ function App() {
     setInput('');
     setIsLoading(true);
 
-    // Recuperar o generar un Session ID único
+    // 2. Control de Sesión
     let sessionId = sessionStorage.getItem('chat_session_id');
     if (!sessionId) {
       sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
@@ -26,12 +26,8 @@ function App() {
     }
 
     try {
-      // 1. Cargamos la URL desde las variables de entorno de Vite
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
-      
-      if (!webhookUrl) {
-        throw new Error("Falta la variable VITE_N8N_WEBHOOK_URL en el archivo .env");
-      }
+      if (!webhookUrl) throw new Error("Falta la URL del Webhook en las variables de entorno");
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -39,32 +35,24 @@ function App() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ 
-          chatInput: messageToSend,
-          sessionId: sessionId
-        }),
+        body: JSON.stringify({ chatInput: messageToSend, sessionId }),
       });
 
-      // 2. Validación estricta de la respuesta HTTP
       if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}: Verifica CORS o si el Webhook está activo en n8n.`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status} - ${errorText || 'Error en n8n'}`);
       }
 
       const data = await response.json();
-      
-      // Dependiendo de cómo responda tu agente en n8n, ajusta "data.reply" o "data.output"
-      const agentReply = data.reply || data.output || data.text || 'Respuesta vacía del servidor.';
+      const agentReply = data.reply || data.output || data.text || 'Sin respuesta.';
       
       setMessages((prev) => [...prev, { role: 'assistant', content: agentReply }]);
-
     } catch (error) {
-      // 3. Log para debugging en consola (vital para ver errores de CORS)
-      console.error("Error de conexión con el Agente AI:", error.message);
-      
-      // Fallback para el cliente
+      console.error(error);
+      // Modo diagnóstico: muestra el error real de la petición en la burbuja
       setMessages((prev) => [...prev, { 
         role: 'assistant', 
-        content: 'Tuvimos un inconveniente técnico momentáneo. Mientras lo resolvemos, revisa nuestra oferta aquí: https://sexshopsantafe.mitiendanube.com/productos/ ✨' 
+        content: `🚨 Error: "${error.message}". Revisa nuestra oferta aquí: https://sexshopsantafe.mitiendanube.com/productos/ ✨` 
       }]);
     } finally {
       setIsLoading(false);
@@ -72,40 +60,51 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <div className="chat-box">
-        <header className="chat-header">
-          <h1 style={{fontSize: '1.4rem', color: '#ff69b4', marginBottom: '5px'}}>Asistente Aurora ✨</h1>
-          <p style={{color: '#ffb6c1', fontSize: '0.8rem'}}>Sexshop 739 | Asesoramiento discreto</p>
-        </header>
+    <div className="app-container">
+      <div className="chat-window">
+        {/* Encabezado del Chat */}
+        <div className="chat-header">
+          <h2>Asistente Aurora ✨</h2>
+          <p>Sexshop 739 | Asesoramiento discreto</p>
+        </div>
 
-        <div className="chat-body">
+        {/* Cuerpo de Mensajes */}
+        <div className="chat-messages">
+          {messages.length === 0 && (
+            <p className="empty-chat">Hola, ¿en qué puedo asesorarte hoy? 🤫</p>
+          )}
+          
           {messages.map((msg, index) => (
-            <div key={index} className={`message-row ${msg.role}`}>
-              <div className="bubble">
-                {msg.content.includes("http") ? (
-                  <a href={msg.content.match(/https?:\/\/[^\s]+/)[0]} target="_blank" rel="noreferrer" style={{color: '#fff', textDecoration: 'underline'}}>
-                    {msg.content}
-                  </a>
-                ) : msg.content}
+            <div key={index} className={`message-wrapper ${msg.role}`}>
+              <div className="message-bubble">
+                {msg.content}
               </div>
             </div>
           ))}
+
           {isLoading && (
-            <div className="message-row assistant">
-              <div className="bubble">Escribiendo...</div>
+            <div className="message-wrapper assistant">
+              <div className="message-bubble loading">
+                <span className="dot"></span>
+                <span className="dot"></span>
+                <span className="dot"></span>
+              </div>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSend} className="input-area">
-          <input 
-            value={input} 
-            onChange={(e) => setInput(e.target.value)} 
-            placeholder="Escribe tu consulta..." 
+        {/* Formulario de Entrada */}
+        <form onSubmit={handleSend} className="chat-input-form">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Escribe tu consulta..."
             disabled={isLoading}
           />
-          <button type="submit" disabled={isLoading}>Enviar</button>
+          <button type="submit" disabled={isLoading || !input.trim()}>
+            Enviar
+          </button>
         </form>
       </div>
     </div>
