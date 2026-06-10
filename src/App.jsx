@@ -10,7 +10,7 @@ function App() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // 1. Renderizar mensaje de usuario y limpiar input
+    // 1. Renderizar mensaje de usuario inmediatamente y limpiar el input
     const userMessage = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
     
@@ -18,7 +18,7 @@ function App() {
     setInput('');
     setIsLoading(true);
 
-    // 2. Control de persistencia de Sesión
+    // 2. Control estricto de Persistencia de Sesión (para n8n Simple Memory)
     let sessionId = sessionStorage.getItem('chat_session_id');
     if (!sessionId) {
       sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
@@ -29,13 +29,17 @@ function App() {
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
       if (!webhookUrl) throw new Error("Falta la URL del Webhook en las variables de entorno");
 
+      // 3. Petición HTTP POST enviando chatInput y sessionId estructurados
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ chatInput: messageToSend, sessionId }),
+        body: JSON.stringify({ 
+          chatInput: messageToSend, 
+          sessionId: sessionId 
+        }),
       });
 
       if (!response.ok) {
@@ -44,16 +48,17 @@ function App() {
       }
 
       const data = await response.json();
-      // Mapeo flexible según la respuesta de tu nodo "Respond to Webhook"
+      
+      // Mapeo flexible para capturar la respuesta del nodo "Respond to Webhook"
       const agentReply = data.reply || data.output || data.text || (typeof data === 'string' ? data : 'Sin respuesta del agente.');
       
       setMessages((prev) => [...prev, { role: 'assistant', content: agentReply }]);
     } catch (error) {
       console.error("Error en la petición:", error);
-      // Fallback de diagnóstico en interfaz
+      // Fallback de diagnóstico visible en la interfaz si n8n falla
       setMessages((prev) => [...prev, { 
         role: 'assistant', 
-        content: `🚨 Error: "${error.message}". Revisa nuestra oferta aquí: https://sexshopsantafe.mitiendanube.com/productos/ ✨` 
+        content: `🚨 Error: "${error.message}". Puedes revisar nuestro catálogo directo aquí: https://sexshopsantafe.mitiendanube.com/productos/ ✨` 
       }]);
     } finally {
       setIsLoading(false);
@@ -63,13 +68,13 @@ function App() {
   return (
     <div className="app-container">
       <div className="chat-window">
-        {/* Encabezado */}
+        {/* Encabezado del Chat */}
         <div className="chat-header">
           <h2>Asistente Aurora ✨</h2>
           <p>Sexshop 739 | Asesoramiento discreto</p>
         </div>
 
-        {/* Historial de Mensajes */}
+        {/* Historial Clínico de Mensajes */}
         <div className="chat-messages">
           {messages.length === 0 && (
             <p className="empty-chat">Hola, ¿en qué puedo asesorarte hoy? 🤫</p>
@@ -83,6 +88,7 @@ function App() {
             </div>
           ))}
 
+          {/* Indicador de carga (Escribiendo...) */}
           {isLoading && (
             <div className="message-wrapper assistant">
               <div className="message-bubble loading">
@@ -94,7 +100,7 @@ function App() {
           )}
         </div>
 
-        {/* Input Form */}
+        {/* Formulario Inferior de Entrada */}
         <form onSubmit={handleSend} className="chat-input-form">
           <input
             type="text"
